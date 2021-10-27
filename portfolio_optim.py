@@ -1,4 +1,4 @@
-# Script to optimise a finance portfolio using the Efficient Frontier Module
+# A script to optimise a finance portfolio using the Efficient Frontier Module
 
 from pandas_datareader import data as web
 import pandas as pd
@@ -9,26 +9,22 @@ from pypfopt.efficient_frontier import EfficientFrontier
 from pypfopt import risk_models
 from pypfopt import expected_returns
 from pypfopt.discrete_allocation import DiscreteAllocation, get_latest_prices
-
 plt.style.use("fivethirtyeight")
 
-# Getting stock ticker from portfolio
-assets = ["FB", "AMZN", "AAPL", "NFLX", "GOOG"]
+# In the assets variable enter the tickers of your portfolio
+assets = ["FB", "AMZN", "AAPL", "VOO", "GOOG"]
 
-# Assign weights to tickers
+# In the weights variable assign the weights for each ticker, The total of all weights amount to 0 (zero)
 weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
-# Get start date for portfolio
+# Enter the portfolio start date
 stock_start = "2013-01-01"
 
-# Get end date
+# The end day is set as the present day
 today = datetime.today().strftime("%Y-%m-%d")
 
-# Creating dataframe ro store adjusted close price of stocks
+# Creating dataframe to store the adjusted close price of stocks. The prices are retrieved from Yahoo
 df = pd.DataFrame()
-
-# Store adjusted close price
-
 for stock in assets:
     df[stock] = web.DataReader(stock, data_source="yahoo", start=stock_start, end=today)["Adj Close"]
 
@@ -44,22 +40,14 @@ plt.ylabel("Adj Price $", fontsize=18)
 plt.legend(my_stocks.columns.values, loc="upper left")
 plt.show()
 
-# Showing daily returns
+# Working the daily returns, covariance, volatility & annual for current portfolio
 returns = df.pct_change()
-
-# Create annualised covariance matrix
 covariance = returns.cov() * 252
-
-# Calculate portfolio variance
 variance = np.dot(weights.T, np.dot(covariance, weights))
-
-# Calculate portfolio volatility (std dev)
 volatility = np.sqrt(variance)
-
-# Calculate annual portfolio return
 annual_return = np.sum(returns.mean() * weights) * 252
 
-# Show the expected annual return, volatility (risk) & variance
+# Show the expected annual return, volatility (risk) & variance as a percentile
 percent_var = str(round(variance, 2) * 100) + "%"
 percent_vol = str(round(volatility, 2) * 100) + "%"
 percent_return = str(round(annual_return, 2) * 100) + "%"
@@ -68,7 +56,7 @@ print("Expected annual return: " + percent_return)
 print("Annual volatility/risk: " + percent_vol)
 print("Annual variance: " + percent_var)
 
-# Portfolio Optimisation
+# Optimising the portfolio
 
 # Calculate expected returns and annualised sample covariance matrix
 mu = expected_returns.mean_historical_return(df)
@@ -78,14 +66,21 @@ S = risk_models.sample_cov(df)
 ef = EfficientFrontier(mu, S)
 weights = ef.max_sharpe()
 cleaned_weights = ef.clean_weights()
+print("Optimised portfolio")
+print("{:<8} {:<15}".format('Ticker', 'Weight'))
 for key in cleaned_weights:
-    print(key, ":", cleaned_weights[key])
+    print("{:<8} {:<15}".format(key, cleaned_weights[key]))
 ef.portfolio_performance(verbose=True)
 
-# Get the discrete allocation of each share per stock
+# Getting the discrete allocation of each share per
+# Enter the funds available in USD in the funds variable
+funds = 15000
 latest_prices = get_latest_prices(df)
 weights = cleaned_weights
-da = DiscreteAllocation(weights, latest_prices,  total_portfolio_value=15000)
+da = DiscreteAllocation(weights, latest_prices,  total_portfolio_value=funds)
 allocation, leftover = da.lp_portfolio()
-print("Discrete allocation: ", allocation)
+print("Discrete allocation")
+print("{:<8} {:<15}".format('Ticker', 'No. of Shares'))
+for key in allocation:
+    print("{:<8} {:<15}".format(key, allocation[key]))
 print("Funds remaining: ${:.2f}".format(leftover))
