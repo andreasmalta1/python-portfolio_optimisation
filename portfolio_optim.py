@@ -14,7 +14,7 @@ plt.style.use("fivethirtyeight")
 # In the assets variable enter the tickers of your portfolio
 assets = ["FB", "AMZN", "AAPL", "VOO", "GOOG"]
 
-# In the weights variable assign the weights for each ticker, The total of all weights amount to 0 (zero)
+# In the weights variable assign the weights for each ticker, The total of all weights amount to 1 (one)
 weights = np.array([0.2, 0.2, 0.2, 0.2, 0.2])
 
 # Enter the portfolio start date
